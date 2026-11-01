@@ -68,7 +68,7 @@ These are **reference calculations**, not guaranteed safe machine settings. Alwa
 
 ## Source
 
-Cutting-speed values transcribed from a user-supplied Spanish reference table titled *Velocidad de corte recomendada (m/min)*. Its original publisher and publication date are not identified.
+Cutting-speed values transcribed from a user-supplied Spanish reference table titled *Velocidad de corte recomendada (m/min)* provided by Raul Molero (Eurecat).
 
 ## License
 
