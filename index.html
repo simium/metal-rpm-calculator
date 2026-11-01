@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d1822">
-  <meta name="description" content="Calculate spindle RPM from a machining cutting-speed table. Select the material, operation, tool material and diameter.">
-  <title>Machining Speed Calculator · Cutting speed to RPM</title>
+  <meta name="description" content="Calcula las revoluciones por minuto (RPM) a partir de una tabla de velocidades de corte. Selecciona el material, la operación, la herramienta y el diámetro.">
+  <title>Calculadora de RPM · Velocidad de corte</title>
   <style>
     :root { color-scheme: light; --ink:#162535; --muted:#597086; --line:#dce6ee; --primary:#006d79; --primary-dark:#00525c; --mint:#d6f6ed; --bg:#f3f6f8; }
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.45; }
     .top { background:#0d1822; color:#fff; padding:36px max(22px, calc((100vw - 1120px) / 2)); }
+    .language-link { float:right; color:#a5e5d7; text-decoration:none; border:1px solid #628482; border-radius:999px; padding:6px 12px; font-size:.82rem; font-weight:650; }
+    .language-link:hover, .language-link:focus-visible { background:#22434b; }
     .eyebrow { text-transform:uppercase; font-size:12px; letter-spacing:.15em; color:#a5e5d7; font-weight:750; margin:0 0 10px; }
     h1 { font-size:clamp(1.75rem,4vw,2.65rem); letter-spacing:-.045em; margin:0 0 9px; line-height:1.12; }
     .intro { color:#bbcad5; max-width:690px; margin:0; font-size:1rem; }
@@ -60,71 +62,72 @@
 </head>
 <body>
 <header class="top">
-  <p class="eyebrow">Machining reference · V<sub>c</sub> → RPM</p>
-  <h1>Cutting speed calculator</h1>
-  <p class="intro">Select the material and operation, enter the diameter, and instantly calculate the theoretical spindle speed using your machining table.</p>
+  <a class="language-link" href="index.en.html" lang="en" hreflang="en">English</a>
+  <p class="eyebrow">Referencia de mecanizado · V<sub>c</sub> → RPM</p>
+  <h1>Calculadora de velocidades de corte</h1>
+  <p class="intro">Selecciona el material y la operación, introduce el diámetro y calcula al instante las revoluciones teóricas del husillo a partir de la tabla de velocidades de corte.</p>
 </header>
 <main class="wrap">
   <div class="workspace">
     <section class="panel" aria-labelledby="input-title">
       <div class="panel-inner">
-        <h2 class="panel-heading" id="input-title">Machining parameters</h2>
+        <h2 class="panel-heading" id="input-title">Parámetros de mecanizado</h2>
         <div class="field">
-          <label for="material">Workpiece material</label>
+          <label for="material">Material de la pieza</label>
           <select id="material"></select>
         </div>
         <div class="field-grid">
           <div class="field">
-            <label for="operation">Operation</label>
+            <label for="operation">Operación</label>
             <select id="operation">
-              <option value="milling" selected>Milling · Fresado</option>
-              <option value="drilling">Drilling · Taladrado</option>
-              <option value="turning">Turning · Torneado</option>
+              <option value="milling" selected>Fresado</option>
+              <option value="drilling">Taladrado</option>
+              <option value="turning">Torneado</option>
             </select>
           </div>
           <div class="field" id="tool-field">
-            <label for="tool">Cutting tool material</label>
+            <label for="tool">Material de la herramienta</label>
             <select id="tool">
-              <option value="hss">HSS · High-speed steel</option>
+              <option value="hss">HSS · Acero rápido</option>
               <option value="cermet">Cermet</option>
             </select>
           </div>
         </div>
         <div class="field-grid">
           <div class="field" id="pass-field">
-            <label for="pass">Cut type</label>
+            <label for="pass">Tipo de pasada</label>
             <select id="pass">
-              <option value="r">Roughing · Desbaste (D)</option>
-              <option value="f">Finishing · Acabado (A)</option>
+              <option value="r">Desbaste (D)</option>
+              <option value="f">Acabado (A)</option>
             </select>
           </div>
           <div class="field">
-            <label for="diameter" id="diameter-label">Tool diameter</label>
+            <label for="diameter" id="diameter-label">Diámetro de la herramienta</label>
             <div class="units">
               <input id="diameter" type="text" inputmode="decimal" autocomplete="off" value="6" aria-describedby="diameter-help">
               <span>mm</span>
             </div>
-            <p class="help" id="diameter-help">Enter a positive diameter, e.g. 6 or 6.5.</p>
+            <p class="help" id="diameter-help">Introduce un diámetro positivo, por ejemplo, 6 o 6,5.</p>
           </div>
         </div>
       </div>
     </section>
-    <aside class="panel" aria-label="Calculated results">
+    <aside class="panel" aria-label="Resultados calculados">
       <div class="results" aria-live="polite" aria-atomic="true">
-        <div class="result-label">Recommended spindle speed from table</div>
+        <div class="result-label">Revoluciones calculadas según la tabla</div>
         <div class="result-number" id="rpm">— <span>RPM</span></div>
         <div class="selected-speed">
-          <span class="result-label">Cutting speed (V<sub>c</sub>)</span>
+          <span class="result-label">Velocidad de corte (V<sub>c</sub>)</span>
           <span class="value" id="vc">—</span>
         </div>
         <p class="equation">n = (1000 × V<sub>c</sub>) / (π × D)</p>
         <div class="message" id="message" hidden role="status"></div>
       </div>
       <div class="reference">
-        <h2>Values from the source table</h2>
-        <p id="reference-detail">Cutting speeds in metres per minute (m/min).</p>
+        <h2>Valores de la tabla de referencia</h2>
+        <p id="reference-detail">Velocidades de corte en metros por minuto (m/min).</p>
         <div class="table-scroll">
-          <table aria-label="Reference cutting speeds for selected material and operation">
+          <table aria-label="Velocidades de corte de referencia para el material y la operación seleccionados">
             <thead id="reference-head"></thead>
             <tbody id="reference-body"></tbody>
           </table>
@@ -133,20 +136,20 @@
     </aside>
   </div>
   <section class="notes" aria-labelledby="notes-title">
-    <h2 id="notes-title">How to interpret the result</h2>
-    <p><strong>n</strong> = spindle speed (RPM), <strong>V<sub>c</sub></strong> = cutting speed (m/min), <strong>D</strong> = diameter (mm). For milling or drilling, D is the <strong>tool diameter</strong>; for turning, D is the <strong>workpiece diameter at the cutting surface</strong>.</p>
-    <p>The numbers are transcribed from the supplied Spanish reference table. <strong>HSS</strong> = high-speed steel; <strong>Cermet</strong> is the table's exact tool category (not a generic synonym for carbide). Blank cells are unavailable, not zero. For drilling, the source gives only HSS values and no separate roughing/finishing speeds.</p>
-    <p><strong>Safety:</strong> These are reference cutting speeds, not guaranteed safe settings. Check the tool maker's recommendations, workholding, machine RPM limits, coolant and setup before cutting. Feed rate is not calculated because it also depends on tool geometry and chip load or feed per revolution.</p>
+    <h2 id="notes-title">Cómo interpretar el resultado</h2>
+    <p><strong>n</strong> = velocidad de giro del husillo (RPM), <strong>V<sub>c</sub></strong> = velocidad de corte (m/min), <strong>D</strong> = diámetro (mm). En fresado y taladrado, D es el <strong>diámetro de la herramienta</strong>; en torneado, D es el <strong>diámetro de la pieza en la zona de corte</strong>.</p>
+    <p>Los valores se han transcrito de la tabla de referencia original. <strong>HSS</strong> = acero rápido; <strong>Cermet</strong> es la categoría indicada en la tabla (no equivale de forma genérica al metal duro). Las celdas vacías significan que no hay un valor disponible, no que sea cero. Para taladrado, la tabla solo proporciona valores de HSS, sin distinguir entre desbaste y acabado.</p>
+    <p><strong>Seguridad:</strong> Son velocidades de corte orientativas, no parámetros de mecanizado garantizados. Comprueba las recomendaciones del fabricante de la herramienta, la sujeción de la pieza, los límites de RPM de la máquina, la refrigeración y el montaje antes de mecanizar. No se calcula el avance porque también depende de la geometría de la herramienta y del avance por diente o por revolución.</p>
   </section>
-  <footer class="footer">Static, browser-only calculator · No account, server, or data collection required.</footer>
+  <footer class="footer">Calculadora estática que funciona en el navegador · Sin cuentas, servidores ni recopilación de datos.</footer>
 </main>
 <script>
   "use strict";
 
-  // Each row is transcribed from the supplied cutting-speed table (m/min).
-  // r = roughing (D): [turning HSS, turning Cermet, milling HSS, milling Cermet, drilling HSS]
-  // f = finishing (A): [turning HSS, turning Cermet, milling HSS, milling Cermet]
-  // null represents a BLANK cell in the source; never infer a missing speed.
+  // Cada fila procede de la tabla original de velocidades de corte (m/min).
+  // r = desbaste (D): [torneado HSS, torneado Cermet, fresado HSS, fresado Cermet, taladrado HSS]
+  // f = acabado (A): [torneado HSS, torneado Cermet, fresado HSS, fresado Cermet]
+  // null indica una celda VACÍA: no se deben inventar velocidades de corte.
   const materials = [
     { group:"Steels", name:"Acero 400–500 N/mm²",             r:[28,110,20,80,24],  f:[40,140,30,100] },
     { group:"Steels", name:"Acero 500–600 N/mm²",             r:[22,80,18,65,20],   f:[30,90,24,70] },
@@ -178,7 +181,7 @@
   const materialSelect = $("material");
   for (const groupName of ["Steels","Non-ferrous","Cast iron","Other"]) {
     const optgroup = document.createElement("optgroup");
-    optgroup.label = groupName;
+    optgroup.label = ({"Steels":"Aceros", "Non-ferrous":"Metales no férreos", "Cast iron":"Fundiciones", "Other":"Otros"})[groupName];
     materials.forEach((m,index) => {
       if (m.group !== groupName) return;
       const option = document.createElement("option");
@@ -189,7 +192,7 @@
     materialSelect.appendChild(optgroup);
   }
 
-  const fmt = new Intl.NumberFormat("en-US", {maximumFractionDigits:0});
+  const fmt = new Intl.NumberFormat("es-ES", {maximumFractionDigits:0});
   const speedText = n => n == null ? "—" : String(n);
   const cell = (tag,text) => { const el = document.createElement(tag); el.textContent = text; return el; };
   
@@ -200,23 +203,23 @@
     body.replaceChildren();
     const header = document.createElement("tr");
     const drilling = operation === "drilling";
-    (drilling ? ["Operation", "HSS"] : ["Pass", "HSS", "Cermet"]).forEach(h => header.appendChild(cell("th",h)));
+    (drilling ? ["Operación", "HSS"] : ["Pasada", "HSS", "Cermet"]).forEach(h => header.appendChild(cell("th",h)));
     head.appendChild(header);
     if (drilling) {
       const row = document.createElement("tr");
       row.className = "highlight";
-      row.append(cell("td","Drilling"),cell("td",speedText(material.r[4])));
+      row.append(cell("td","Taladrado"),cell("td",speedText(material.r[4])));
       body.appendChild(row);
     } else {
       const offset = operation === "turning" ? 0 : 2;
-      for (const [key,label] of [["r","Roughing (D)"],["f","Finishing (A)"]]) {
+      for (const [key,label] of [["r","Desbaste (D)"],["f","Acabado (A)"]]) {
         const row = document.createElement("tr");
         if (key === pass) row.className = "highlight";
         row.append(cell("td",label),cell("td",speedText(material[key][offset])),cell("td",speedText(material[key][offset+1])));
         body.appendChild(row);
       }
     }
-    $("reference-detail").textContent = `${material.name} · ${operation} · cutting speed in m/min`;
+    $("reference-detail").textContent = `${material.name} · ${({milling:"fresado",drilling:"taladrado",turning:"torneado"})[operation]} · velocidad de corte en m/min`;
   }
 
   function update() {
@@ -226,7 +229,7 @@
     if (drilling) $("tool").value = "hss";
     $("tool-field").hidden = drilling;
     $("pass-field").hidden = drilling;
-    $("diameter-label").textContent = operation === "turning" ? "Workpiece diameter" : "Tool diameter";
+    $("diameter-label").textContent = operation === "turning" ? "Diámetro de la pieza" : "Diámetro de la herramienta";
     const tool = $("tool").value;
     const pass = $("pass").value;
     const index = drilling ? 4 : (operation === "turning" ? 0 : 2) + (tool === "cermet" ? 1 : 0);
@@ -238,14 +241,14 @@
     const valid = rawDiameter !== "" && Number.isFinite(diameter) && diameter > 0;
     const warning = $("message");
     warning.hidden = true;
-    $("vc").textContent = vc == null ? "Not listed" : `${vc} m/min`;
+    $("vc").textContent = vc == null ? "No disponible" : `${vc} m/min`;
     if (!valid) {
       $("rpm").innerHTML = '— <span>RPM</span>';
-      warning.textContent = "Enter a valid diameter greater than 0 mm.";
+      warning.textContent = "Introduce un diámetro válido mayor que 0 mm.";
       warning.hidden = false;
     } else if (vc == null) {
       $("rpm").innerHTML = '— <span>RPM</span>';
-      warning.textContent = "This combination is blank in the original table. No cutting speed or RPM is assumed.";
+      warning.textContent = "Esta combinación no tiene un valor en la tabla original. No se asigna ninguna velocidad de corte ni RPM.";
       warning.hidden = false;
     } else {
       const rpm = 1000 * vc / (Math.PI * diameter);
