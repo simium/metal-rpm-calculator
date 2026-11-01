@@ -192,6 +192,12 @@
     materialSelect.appendChild(optgroup);
   }
 
+  const defaultMaterial = "Acero 600–850 N/mm²";
+
+  materialSelect.value = String(
+    materials.findIndex(m => m.name === defaultMaterial)
+  );
+
   const fmt = new Intl.NumberFormat("es-ES", {maximumFractionDigits:0});
   const speedText = n => n == null ? "—" : String(n);
   const cell = (tag,text) => { const el = document.createElement(tag); el.textContent = text; return el; };
