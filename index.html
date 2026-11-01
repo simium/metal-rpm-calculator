@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1822">
+  <meta name="description" content="Calculate spindle RPM from a machining cutting-speed table. Select the material, operation, tool material and diameter.">
+  <title>Machining Speed Calculator · Cutting speed to RPM</title>
+  <style>
+    :root { color-scheme: light; --ink:#162535; --muted:#597086; --line:#dce6ee; --primary:#006d79; --primary-dark:#00525c; --mint:#d6f6ed; --bg:#f3f6f8; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; line-height:1.45; }
+    .top { background:#0d1822; color:#fff; padding:36px max(22px, calc((100vw - 1120px) / 2)); }
+    .eyebrow { text-transform:uppercase; font-size:12px; letter-spacing:.15em; color:#a5e5d7; font-weight:750; margin:0 0 10px; }
+    h1 { font-size:clamp(1.75rem,4vw,2.65rem); letter-spacing:-.045em; margin:0 0 9px; line-height:1.12; }
+    .intro { color:#bbcad5; max-width:690px; margin:0; font-size:1rem; }
+    .wrap { max-width:1164px; margin:30px auto 44px; padding:0 22px; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1.16fr) minmax(310px,.84fr); gap:20px; align-items:start; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:0 9px 28px rgba(15,47,63,.045); overflow:hidden; }
+    .panel-inner { padding:26px; }
+    .panel-heading { margin:0 0 20px; font-size:1.13rem; letter-spacing:-.02em; }
+    .field { margin-bottom:19px; }
+    .field:last-child { margin-bottom:0; }
+    label { display:block; font-weight:670; font-size:.89rem; margin-bottom:7px; }
+    select,input { width:100%; border:1.5px solid #cad8e3; border-radius:10px; background:#fff; color:var(--ink); font:inherit; padding:12px 13px; min-height:48px; }
+    select:focus,input:focus { outline:3px solid #b1e5e8; border-color:var(--primary); }
+    select:disabled { background:#f1f4f6; color:#667c89; }
+    .help { margin:7px 0 0; font-size:.79rem; color:var(--muted); }
+    .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .units { display:flex; align-items:center; position:relative; }
+    .units input { padding-right:62px; }
+    .units span { position:absolute; right:16px; color:var(--muted); pointer-events:none; }
+    .results { background:linear-gradient(155deg,#103440,#0e242e); color:#fff; padding:27px; }
+    .result-label { color:#b2d0d1; font-size:.84rem; font-weight:650; }
+    .result-number { font-size:clamp(2.8rem,5.4vw,4rem); font-variant-numeric:tabular-nums; letter-spacing:-.075em; font-weight:790; margin:8px 0 1px; line-height:1.1; overflow-wrap:anywhere; }
+    .result-number span { font-size:1.15rem; letter-spacing:0; font-weight:650; color:#a9d9cf; }
+    .selected-speed { border-top:1px solid rgba(255,255,255,.17); margin-top:23px; padding-top:18px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .selected-speed .value { font-variant-numeric:tabular-nums; font-size:1.25rem; font-weight:730; }
+    .equation { color:#c6dedf; font-size:.89rem; margin:16px 0 0; }
+    .message { background:#fff5e8; color:#80501b; border:1px solid #f3d5a3; border-radius:11px; padding:11px 12px; margin-top:14px; font-size:.88rem; }
+    .message[hidden], [hidden] { display:none!important; }
+    .reference { padding:24px 27px; }
+    .reference h2,.notes h2 { font-size:1.02rem; margin:0 0 10px; }
+    .reference p { margin:0 0 12px; color:var(--muted); font-size:.83rem; }
+    .table-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.86rem; }
+    th,td { padding:9px 7px; text-align:left; border-bottom:1px solid var(--line); }
+    th { color:#60778a; font-size:.78rem; font-weight:680; }
+    tbody tr:last-child td { border-bottom:0; }
+    td { font-variant-numeric:tabular-nums; }
+    .highlight td { background:#eaf8f3; font-weight:730; }
+    .notes { margin-top:20px; padding:22px 26px; border:1px solid var(--line); border-radius:16px; background:#fff; }
+    .notes p { color:#52697e; font-size:.91rem; margin:9px 0; }
+    .notes p:last-child { margin-bottom:0; }
+    code { background:#edf3f5; padding:2px 5px; border-radius:4px; }
+    .footer { font-size:.77rem; color:#718495; padding:19px 0 0; }
+    @media(max-width:820px){ .workspace { grid-template-columns:1fr; } .wrap{margin-top:20px} .results{padding:25px} }
+    @media(max-width:480px){ .top{padding:30px 20px} .wrap{padding:0 12px} .panel-inner{padding:20px} .reference{padding:20px} .field-grid{grid-template-columns:1fr;gap:0} }
+  </style>
+</head>
+<body>
+<header class="top">
+  <p class="eyebrow">Machining reference · V<sub>c</sub> → RPM</p>
+  <h1>Cutting speed calculator</h1>
+  <p class="intro">Select the material and operation, enter the diameter, and instantly calculate the theoretical spindle speed using your machining table.</p>
+</header>
+<main class="wrap">
+  <div class="workspace">
+    <section class="panel" aria-labelledby="input-title">
+      <div class="panel-inner">
+        <h2 class="panel-heading" id="input-title">Machining parameters</h2>
+        <div class="field">
+          <label for="material">Workpiece material</label>
+          <select id="material"></select>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="operation">Operation</label>
+            <select id="operation">
+              <option value="milling" selected>Milling · Fresado</option>
+              <option value="drilling">Drilling · Taladrado</option>
+              <option value="turning">Turning · Torneado</option>
+            </select>
+          </div>
+          <div class="field" id="tool-field">
+            <label for="tool">Cutting tool material</label>
+            <select id="tool">
+              <option value="hss">HSS · High-speed steel</option>
+              <option value="cermet">Cermet</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field" id="pass-field">
+            <label for="pass">Cut type</label>
+            <select id="pass">
+              <option value="r">Roughing · Desbaste (D)</option>
+              <option value="f">Finishing · Acabado (A)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="diameter" id="diameter-label">Tool diameter</label>
+            <div class="units">
+              <input id="diameter" type="text" inputmode="decimal" autocomplete="off" value="6" aria-describedby="diameter-help">
+              <span>mm</span>
+            </div>
+            <p class="help" id="diameter-help">Enter a positive diameter, e.g. 6 or 6.5.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="panel" aria-label="Calculated results">
+      <div class="results" aria-live="polite" aria-atomic="true">
+        <div class="result-label">Recommended spindle speed from table</div>
+        <div class="result-number" id="rpm">— <span>RPM</span></div>
+        <div class="selected-speed">
+          <span class="result-label">Cutting speed (V<sub>c</sub>)</span>
+          <span class="value" id="vc">—</span>
+        </div>
+        <p class="equation">n = (1000 × V<sub>c</sub>) / (π × D)</p>
+        <div class="message" id="message" hidden role="status"></div>
+      </div>
+      <div class="reference">
+        <h2>Values from the source table</h2>
+        <p id="reference-detail">Cutting speeds in metres per minute (m/min).</p>
+        <div class="table-scroll">
+          <table aria-label="Reference cutting speeds for selected material and operation">
+            <thead id="reference-head"></thead>
+            <tbody id="reference-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <section class="notes" aria-labelledby="notes-title">
+    <h2 id="notes-title">How to interpret the result</h2>
+    <p><strong>n</strong> = spindle speed (RPM), <strong>V<sub>c</sub></strong> = cutting speed (m/min), <strong>D</strong> = diameter (mm). For milling or drilling, D is the <strong>tool diameter</strong>; for turning, D is the <strong>workpiece diameter at the cutting surface</strong>.</p>
+    <p>The numbers are transcribed from the supplied Spanish reference table. <strong>HSS</strong> = high-speed steel; <strong>Cermet</strong> is the table's exact tool category (not a generic synonym for carbide). Blank cells are unavailable, not zero. For drilling, the source gives only HSS values and no separate roughing/finishing speeds.</p>
+    <p><strong>Safety:</strong> These are reference cutting speeds, not guaranteed safe settings. Check the tool maker's recommendations, workholding, machine RPM limits, coolant and setup before cutting. Feed rate is not calculated because it also depends on tool geometry and chip load or feed per revolution.</p>
+  </section>
+  <footer class="footer">Static, browser-only calculator · No account, server, or data collection required.</footer>
+</main>
+<script>
+  "use strict";
+
+  // Each row is transcribed from the supplied cutting-speed table (m/min).
+  // r = roughing (D): [turning HSS, turning Cermet, milling HSS, milling Cermet, drilling HSS]
+  // f = finishing (A): [turning HSS, turning Cermet, milling HSS, milling Cermet]
+  // null represents a BLANK cell in the source; never infer a missing speed.
+  const materials = [
+    { group:"Steels", name:"Acero 400–500 N/mm²",             r:[28,110,20,80,24],  f:[40,140,30,100] },
+    { group:"Steels", name:"Acero 500–600 N/mm²",             r:[22,80,18,65,20],   f:[30,90,24,70] },
+    { group:"Steels", name:"Acero 600–850 N/mm²",             r:[18,70,16,60,16],   f:[24,80,22,70] },
+    { group:"Steels", name:"Acero 850–1100 N/mm²",            r:[16,60,14,50,14],   f:[18,70,16,60] },
+    { group:"Steels", name:"Acero 1100–1400 N/mm²",           r:[10,40,8,30,8],     f:[12,45,10,35] },
+    { group:"Steels", name:"Acero 1400–1800 N/mm²",           r:[8,30,6,25,6],      f:[10,35,8,30] },
+    { group:"Steels", name:"Acero moldeado 380 N/mm²",        r:[20,75,16,55,18],   f:[24,85,20,75] },
+    { group:"Steels", name:"Acero moldeado 450 N/mm²",        r:[18,70,14,50,16],   f:[20,80,16,60] },
+    { group:"Steels", name:"Acero moldeado 520 N/mm²",        r:[14,55,12,45,12],   f:[16,60,14,55] },
+    { group:"Steels", name:"Acero aleado 12% Mn",             r:[3,10,null,null,3], f:[4,15,null,null] },
+    { group:"Steels", name:"Acero inoxidable",                r:[8,30,4,15,6],      f:[14,55,10,35] },
+    { group:"Steels", name:"Metal Monel",                     r:[15,60,12,45,12],   f:[18,70,14,55] },
+    { group:"Non-ferrous", name:"Aluminio magnesio",           r:[140,350,114,300,125],f:[170,400,160,350] },
+    { group:"Non-ferrous", name:"Aleaciones de Al",            r:[90,300,70,250,80], f:[120,350,98,300] },
+    { group:"Non-ferrous", name:"Cupro-aluminio",              r:[20,75,16,60,18],   f:[24,90,22,80] },
+    { group:"Non-ferrous", name:"Cobre",                       r:[36,130,28,100,32], f:[46,150,40,140] },
+    { group:"Non-ferrous", name:"Bronce",                      r:[42,150,34,125,38], f:[56,170,46,150] },
+    { group:"Non-ferrous", name:"Bronce fosforoso",            r:[18,70,14,60,16],   f:[30,100,20,90] },
+    { group:"Cast iron", name:"Fundición hierro 150 N/mm²",    r:[22,80,18,70,20],   f:[26,90,24,85] },
+    { group:"Cast iron", name:"Fundición hierro 180 N/mm²",    r:[20,70,16,60,18],   f:[24,85,22,80] },
+    { group:"Cast iron", name:"Fundición hierro 220 N/mm²",    r:[16,60,14,55,14],   f:[20,70,20,70] },
+    { group:"Cast iron", name:"Fundición hierro 260 N/mm²",    r:[12,40,10,35,11],   f:[14,55,14,55] },
+    { group:"Other", name:"Grafito para electrodos",           r:[10,35,null,null,9],f:[12,40,null,null] },
+    { group:"Other", name:"Materiales plásticos",             r:[30,100,24,80,26],  f:[50,150,30,100] }
+  ];
+
+  const $ = id => document.getElementById(id);
+  const materialSelect = $("material");
+  for (const groupName of ["Steels","Non-ferrous","Cast iron","Other"]) {
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = groupName;
+    materials.forEach((m,index) => {
+      if (m.group !== groupName) return;
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = m.name;
+      optgroup.appendChild(option);
+    });
+    materialSelect.appendChild(optgroup);
+  }
+
+  const fmt = new Intl.NumberFormat("en-US", {maximumFractionDigits:0});
+  const speedText = n => n == null ? "—" : String(n);
+  const cell = (tag,text) => { const el = document.createElement(tag); el.textContent = text; return el; };
+  
+  function renderReference(material,operation,pass,tool) {
+    const head = $("reference-head");
+    const body = $("reference-body");
+    head.replaceChildren();
+    body.replaceChildren();
+    const header = document.createElement("tr");
+    const drilling = operation === "drilling";
+    (drilling ? ["Operation", "HSS"] : ["Pass", "HSS", "Cermet"]).forEach(h => header.appendChild(cell("th",h)));
+    head.appendChild(header);
+    if (drilling) {
+      const row = document.createElement("tr");
+      row.className = "highlight";
+      row.append(cell("td","Drilling"),cell("td",speedText(material.r[4])));
+      body.appendChild(row);
+    } else {
+      const offset = operation === "turning" ? 0 : 2;
+      for (const [key,label] of [["r","Roughing (D)"],["f","Finishing (A)"]]) {
+        const row = document.createElement("tr");
+        if (key === pass) row.className = "highlight";
+        row.append(cell("td",label),cell("td",speedText(material[key][offset])),cell("td",speedText(material[key][offset+1])));
+        body.appendChild(row);
+      }
+    }
+    $("reference-detail").textContent = `${material.name} · ${operation} · cutting speed in m/min`;
+  }
+
+  function update() {
+    const material = materials[Number(materialSelect.value)];
+    const operation = $("operation").value;
+    const drilling = operation === "drilling";
+    if (drilling) $("tool").value = "hss";
+    $("tool-field").hidden = drilling;
+    $("pass-field").hidden = drilling;
+    $("diameter-label").textContent = operation === "turning" ? "Workpiece diameter" : "Tool diameter";
+    const tool = $("tool").value;
+    const pass = $("pass").value;
+    const index = drilling ? 4 : (operation === "turning" ? 0 : 2) + (tool === "cermet" ? 1 : 0);
+    const vc = drilling ? material.r[index] : material[pass][index];
+    renderReference(material,operation,pass,tool);
+
+    const rawDiameter = $("diameter").value.trim().replace(",", ".");
+    const diameter = Number(rawDiameter);
+    const valid = rawDiameter !== "" && Number.isFinite(diameter) && diameter > 0;
+    const warning = $("message");
+    warning.hidden = true;
+    $("vc").textContent = vc == null ? "Not listed" : `${vc} m/min`;
+    if (!valid) {
+      $("rpm").innerHTML = '— <span>RPM</span>';
+      warning.textContent = "Enter a valid diameter greater than 0 mm.";
+      warning.hidden = false;
+    } else if (vc == null) {
+      $("rpm").innerHTML = '— <span>RPM</span>';
+      warning.textContent = "This combination is blank in the original table. No cutting speed or RPM is assumed.";
+      warning.hidden = false;
+    } else {
+      const rpm = 1000 * vc / (Math.PI * diameter);
+      $("rpm").innerHTML = `${fmt.format(Math.round(rpm))} <span>RPM</span>`;
+    }
+  }
+
+  ["material","operation","tool","pass","diameter"].forEach(id => {
+    $(id).addEventListener(id === "diameter" ? "input" : "change", update);
+  });
+  update();
+</script>
+</body>
+</html>
