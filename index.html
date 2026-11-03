@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d1822">
-  <meta name="description" content="Calcula las revoluciones por minuto (RPM) a partir de una tabla de velocidades de corte. Selecciona el material, la operación, la herramienta y el diámetro.">
+  <meta name="description" content="Calcula las revoluciones por minuto (RPM) a partir de una tabla de velocidades de corte y, para fresado, el avance (mm/min).">
   <title>Calculadora de RPM · Velocidad de corte</title>
   <style>
     :root { color-scheme: light; --ink:#162535; --muted:#597086; --line:#dce6ee; --primary:#006d79; --primary-dark:#00525c; --mint:#d6f6ed; --bg:#f3f6f8; }
@@ -36,6 +36,10 @@
     .result-label { color:#b2d0d1; font-size:.84rem; font-weight:650; }
     .result-number { font-size:clamp(2.8rem,5.4vw,4rem); font-variant-numeric:tabular-nums; letter-spacing:-.075em; font-weight:790; margin:8px 0 1px; line-height:1.1; overflow-wrap:anywhere; }
     .result-number span { font-size:1.15rem; letter-spacing:0; font-weight:650; color:#a9d9cf; }
+    .feed-input input { padding-right:107px; }
+    .feed-result { border-top:1px solid rgba(255,255,255,.17); margin-top:23px; padding-top:19px; }
+    .feed-number { font-size:clamp(2.0rem,4vw,2.7rem); font-variant-numeric:tabular-nums; font-weight:760; letter-spacing:-.055em; line-height:1.17; margin:7px 0 2px; overflow-wrap:anywhere; }
+    .feed-number span { font-size:1.05rem; letter-spacing:0; font-weight:650; color:#a9d9cf; }
     .selected-speed { border-top:1px solid rgba(255,255,255,.17); margin-top:23px; padding-top:18px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .selected-speed .value { font-variant-numeric:tabular-nums; font-size:1.25rem; font-weight:730; }
     .equation { color:#c6dedf; font-size:.89rem; margin:16px 0 0; }
@@ -65,7 +69,7 @@
   <a class="language-link" href="index.en.html" lang="en" hreflang="en">English</a>
   <p class="eyebrow">Referencia de mecanizado · V<sub>c</sub> → RPM</p>
   <h1>Calculadora de velocidades de corte</h1>
-  <p class="intro">Selecciona el material y la operación, introduce el diámetro y calcula al instante las revoluciones teóricas del husillo a partir de la tabla de velocidades de corte.</p>
+  <p class="intro">Selecciona el material y la operación, introduce el diámetro y calcula las RPM del husillo. Para fresado, añade el número de filos y el avance por diente para obtener también el avance en mm/min.</p>
 </header>
 <main class="wrap">
   <div class="workspace">
@@ -110,6 +114,22 @@
             <p class="help" id="diameter-help">Introduce un diámetro positivo, por ejemplo, 6 o 6,5.</p>
           </div>
         </div>
+        <div class="field-grid" id="feed-fields">
+          <div class="field">
+            <label for="flutes">Número de filos (z)</label>
+            <select id="flutes">
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="feed-per-tooth">Avance por diente (f<sub>z</sub>)</label>
+            <div class="units feed-input">
+              <input id="feed-per-tooth" type="text" inputmode="decimal" autocomplete="off" value="0.08" aria-describedby="feed-help">
+              <span>mm/diente</span>
+            </div>
+            <p class="help" id="feed-help">Introduce el avance por diente recomendado para tu herramienta; no aparece en la tabla de velocidades de corte.</p>
+          </div>
+        </div>
       </div>
     </section>
     <aside class="panel" aria-label="Resultados calculados">
@@ -122,6 +142,12 @@
         </div>
         <p class="equation">n = (1000 × V<sub>c</sub>) / (π × D)</p>
         <div class="message" id="message" hidden role="status"></div>
+        <div class="feed-result" id="feed-result">
+          <div class="result-label">Avance de fresado calculado</div>
+          <div class="feed-number" id="feed">— <span>mm/min</span></div>
+          <p class="equation">F = n × z × f<sub>z</sub></p>
+          <div class="message" id="feed-message" hidden role="status"></div>
+        </div>
       </div>
       <div class="reference">
         <h2>Valores de la tabla de referencia</h2>
@@ -139,7 +165,8 @@
     <h2 id="notes-title">Cómo interpretar el resultado</h2>
     <p><strong>n</strong> = velocidad de giro del husillo (RPM), <strong>V<sub>c</sub></strong> = velocidad de corte (m/min), <strong>D</strong> = diámetro (mm). En fresado y taladrado, D es el <strong>diámetro de la herramienta</strong>; en torneado, D es el <strong>diámetro de la pieza en la zona de corte</strong>.</p>
     <p>Los valores se han transcrito de la tabla de referencia original. <strong>HSS</strong> = acero rápido; <strong>Cermet</strong> es la categoría indicada en la tabla (no equivale de forma genérica al metal duro). Las celdas vacías significan que no hay un valor disponible, no que sea cero. Para taladrado, la tabla solo proporciona valores de HSS, sin distinguir entre desbaste y acabado.</p>
-    <p><strong>Seguridad:</strong> Son velocidades de corte orientativas, no parámetros de mecanizado garantizados. Comprueba las recomendaciones del fabricante de la herramienta, la sujeción de la pieza, los límites de RPM de la máquina, la refrigeración y el montaje antes de mecanizar. No se calcula el avance porque también depende de la geometría de la herramienta y del avance por diente o por revolución.</p>
+    <p><strong>Seguridad:</strong> Son velocidades de corte orientativas, no parámetros de mecanizado garantizados. Comprueba las recomendaciones del fabricante de la herramienta, la sujeción de la pieza, los límites de RPM de la máquina, la refrigeración y el montaje antes de mecanizar. El avance de fresado se calcula a partir del avance por diente facilitado por el usuario; verifica este parámetro y la capacidad de la máquina.</p>
+    <p><strong>Avance de fresado:</strong> F = n × z × f<sub>z</sub>, donde <strong>z</strong> es el número de filos y <strong>f<sub>z</sub></strong> es el avance por diente (mm). El avance por diente lo proporciona el usuario; no está incluido en la tabla original. Para taladrado y torneado, utiliza el avance por revolución (mm/vuelta) recomendado por el fabricante.</p>
   </section>
   <footer class="footer">Calculadora estática que funciona en el navegador · Sin cuentas, servidores ni recopilación de datos.</footer>
 </main>
@@ -193,12 +220,11 @@
   }
 
   const defaultMaterial = "Acero 600–850 N/mm²";
-
-  materialSelect.value = String(
-    materials.findIndex(m => m.name === defaultMaterial)
-  );
+  const defaultIndex = materials.findIndex(m => m.name === defaultMaterial);
+  if (defaultIndex !== -1) materialSelect.value = String(defaultIndex);
 
   const fmt = new Intl.NumberFormat("es-ES", {maximumFractionDigits:0});
+  const feedFmt = new Intl.NumberFormat("es-ES", {maximumFractionDigits:2});
   const speedText = n => n == null ? "—" : String(n);
   const cell = (tag,text) => { const el = document.createElement(tag); el.textContent = text; return el; };
   
@@ -232,6 +258,9 @@
     const material = materials[Number(materialSelect.value)];
     const operation = $("operation").value;
     const drilling = operation === "drilling";
+    const milling = operation === "milling";
+    $("feed-fields").hidden = !milling;
+    $("feed-result").hidden = !milling;
     if (drilling) $("tool").value = "hss";
     $("tool-field").hidden = drilling;
     $("pass-field").hidden = drilling;
@@ -245,9 +274,17 @@
     const rawDiameter = $("diameter").value.trim().replace(",", ".");
     const diameter = Number(rawDiameter);
     const valid = rawDiameter !== "" && Number.isFinite(diameter) && diameter > 0;
+    const rawFz = $("feed-per-tooth").value.trim().replace(",", ".");
+    const fz = Number(rawFz);
+    const validFz = rawFz !== "" && Number.isFinite(fz) && fz > 0;
+    const flutes = Number($("flutes").value);
+    const feedWarning = $("feed-message");
+    feedWarning.hidden = true;
+    $("feed").innerHTML = '— <span>mm/min</span>';
     const warning = $("message");
     warning.hidden = true;
     $("vc").textContent = vc == null ? "No disponible" : `${vc} m/min`;
+    let rpm = null;
     if (!valid) {
       $("rpm").innerHTML = '— <span>RPM</span>';
       warning.textContent = "Introduce un diámetro válido mayor que 0 mm.";
@@ -257,13 +294,22 @@
       warning.textContent = "Esta combinación no tiene un valor en la tabla original. No se asigna ninguna velocidad de corte ni RPM.";
       warning.hidden = false;
     } else {
-      const rpm = 1000 * vc / (Math.PI * diameter);
+      rpm = 1000 * vc / (Math.PI * diameter);
       $("rpm").innerHTML = `${fmt.format(Math.round(rpm))} <span>RPM</span>`;
+    }
+    if (milling) {
+      if (!validFz) {
+        feedWarning.textContent = "Introduce un avance por diente válido y mayor que 0 mm.";
+        feedWarning.hidden = false;
+      } else if (rpm !== null) {
+        const feed = rpm * flutes * fz;
+        $("feed").innerHTML = `${feedFmt.format(feed)} <span>mm/min</span>`;
+      }
     }
   }
 
-  ["material","operation","tool","pass","diameter"].forEach(id => {
-    $(id).addEventListener(id === "diameter" ? "input" : "change", update);
+  ["material","operation","tool","pass","diameter","flutes","feed-per-tooth"].forEach(id => {
+    $(id).addEventListener(["diameter", "feed-per-tooth"].includes(id) ? "input" : "change", update);
   });
   update();
 </script>
